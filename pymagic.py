@@ -1,6 +1,10 @@
 import sys
 import os
 import copy
+import re
+
+FUNC_TEMPL = 'Rte_'
+
 
 
 class RteMock:
@@ -50,47 +54,64 @@ class RteMock:
         temp_func_names = copy.deepcopy(func_names)
 
         with open(rte_file, "r") as lib:
+            # Keep previous 3 lines
+            pline3 = ''
+            pline2 = ''
+            pline1 = ''
             func_found = False
-            prev_line_3 = ''
-            prev_line_2 = ''
-            prev_line_1 = ''
 
-            for line in lib.readlines():
-                line_idx = line.find('Rte_')
-                if (line_idx != -1):
+            # Parse Rte.c line by line
+            for line0 in lib.readlines():
+                if (line0 == '\n'): continue
+                rte_idx = pline2.find(FUNC_TEMPL)
+                if (rte_idx != -1):
                     # Rte function name occupies the entire row/line
-                    rte_func = line[line_idx:].replace('\n', '')
+                    rte_func = pline2[rte_idx:].replace('\n', '')
                     if (rte_func in func_names):
-                        func_found = True
-                        func_decl.append(rte_func)
+                        func_decl.append(self.__parse_multiple_row(pline3 + pline2 + pline1 + line0, rte_func))
                         temp_func_names.remove(rte_func)
-
+                        func_found = True
 
                     # If some other info is in the row/line, search func_names in line
                     else:
                         for item in temp_func_names:
-                            if (item in line[line_idx:]):
-                                func_found = True
-                                func_decl.append(item)
+                            if (item in pline2[rte_idx:]):
+                                func_decl.append(self.__parse_multiple_row(pline3 + pline2 + pline1 + line0, item))
                                 temp_func_names.remove(item)
+                                func_found = True
                                 break
-    
-                prev_line_3 = prev_line_2
-                prev_line_2 = prev_line_1
-                prev_line_1 = line
+                        
 
+                pline3 = pline2
+                pline2 = pline1
+                pline1 = line0
+                func_found = False
 
-        # print(temp_func_names)
         return func_decl
-    
 
-    def __parse_single_row(self, func_names, pl_3, pl_2, pl_1, cur_l):
-        pass
+    # Parse string containg func ret type, name, params and return a pretty split array (ex: [FUNC(Std_ReturnType, RTE_CODE), Func_Name, (P2CONST(Type, AUTOMATIC, RTE_APPL_DATA) Data)]) 
+    def __parse_multiple_row(self, func_row, func_name):
+        func_decl = []
 
+        func_row = func_row.replace('\n', '')
+        # Function Return type
+        func_decl.append('FUNC(' + re.search(r'FUNC\((.*?)\)', func_row).group(1) + ')')
+        # Function Name
+        func_decl.append(func_name)
+        func_row = func_row.split(func_name, 1)[1]
+        # Function parameters
+        if ('{' in func_row):
+            func_decl.append('(' + re.search(r'\((.*?)\{', func_row).group(1))
+        else:
+            func_decl.append(func_row.rstrip())
 
-    def __parse_multiple_row(self, func_names, pl_3, pl_2, pl_1, cur_l):
-        pass
+        return func_decl
 
+    def __print_lines(self, pl3, pl2, pl1, cur_l):
+        print("3: " + pl3)
+        print("2: " + pl2)
+        print("1: " + pl1)
+        print("0: " + cur_l + "\n")
 
     def gen_template(self, funcs, output):
         pass
@@ -106,7 +127,7 @@ class RteMock:
 if __name__ == "__main__":
     mock = RteMock('c')
     func_names = mock.parse_lib(sys.argv[1])
-    print(len(func_names))
     funcs = mock.parse_rte(func_names, sys.argv[2])
-    print(len(funcs))
     # mock.gen_template('c', funcs, sys.argv[4])
+
+    for i, f in enumerate(funcs): print('{}: {}'.format(i, f))
