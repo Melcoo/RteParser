@@ -2,6 +2,7 @@ import sys
 import os
 import copy
 import re
+from Cheetah.Template import Template
 
 FUNC_TEMPL = 'Rte_'
 
