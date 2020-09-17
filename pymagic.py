@@ -11,8 +11,23 @@ FUNC_TEMPL = 'Rte_'
 class RteMock:
     cur_dir = os.path.dirname(sys.argv[0])
 
-    def __init__(self, template):
-        self.template = template
+    def __init__(self, compiler_header):
+        self.compiler_header = compiler_header
+        self.__compiler_types = []
+
+        self.__parse_compiler_macros()
+
+
+    def __parse_compiler_macros(self):
+        with open(self.compiler_header, "r") as head:
+            for line in head.readlines():
+                # Search for lines which contain '#define' and '('
+                if ('#define' in line) and ('(' in line):
+                    # Get str between '#define' and '('
+                    self.__compiler_types.append(re.search(r'#define (.*?)\(', line).group(1))
+
+        # Remove any duplicates
+        self.__compiler_types = list(set(self.__compiler_types))
 
 
     # Return an array with all read/write functions names
@@ -90,23 +105,94 @@ class RteMock:
 
         return func_decl
 
+
     # Parse string containg func ret type, name, params and return a pretty split array (ex: [FUNC(Std_ReturnType, RTE_CODE), Func_Name, (P2CONST(Type, AUTOMATIC, RTE_APPL_DATA) Data)]) 
+    # Return: dict for one func with below format
     def __parse_multiple_row(self, func_row, func_name):
-        func_decl = []
+        func_decl = {}
+        # {
+        # 	"retval": "FUNC...",
+        # 	"name": "Rte_Read...",
+        # 	"params": {
+        # 		"decl": "(VAR (uint8, RTE_APPL_DATA) Data)",
+        # 		"vals": [
+        # 			{
+        # 				"type": "VAR (uint8, RTE_APPL_DATA)",
+        # 				"name": "Data"
+        # 			},
+        # 							{
+        # 				"type": "P2VAR (AngularSpeedRightObject2, AUTOMATIC, RTE_APPL_DATA)",
+        # 				"name": "Data"
+        # 			}
+        # 		]
+        # 	}
+        # }
 
         func_row = func_row.replace('\n', '')
         # Function Return type
-        func_decl.append('FUNC(' + re.search(r'FUNC\((.*?)\)', func_row).group(1) + ')')
+        func_decl['retval'] = 'FUNC(' + re.search(r'FUNC\((.*?)\)', func_row).group(1) + ')'
         # Function Name
-        func_decl.append(func_name)
+        func_decl['name'] = func_name
         func_row = func_row.split(func_name, 1)[1]
         # Function parameters
+        func_decl['params'] = {}
         if ('{' in func_row):
-            func_decl.append('(' + re.search(r'\((.*?)\{', func_row).group(1))
+            func_decl['params']['decl'] = '(' + re.search(r'\((.*?)\{', func_row).group(1)
         else:
-            func_decl.append(func_row.rstrip())
+            func_decl['params']['decl'] = func_row.rstrip()
+        func_decl['params']['vals'] = self.__parse_params_val(func_decl['params']['decl'])
 
         return func_decl
+
+    # Extract from params row - Eg: (P2VAR (Rte_ModeType_Coding_DataMode, AUTOMATIC, RTE_APPL_DATA) previousmode, P2VAR (Rte_ModeType_Coding_DataMode, AUTOMATIC, RTE_APPL_DATA) nextmode) - param types and param names
+    # Return: array of dicts with  keys: 'type', 'name'
+    def __parse_params_val(self, param_row):
+        params = []
+        macro_idx = []
+
+        # Remove parantheses and white spaces first
+        param_row = param_row.lstrip('(').lstrip().rstrip(')')
+    
+        for macro in self.__compiler_types:
+            matches = re.finditer(macro, param_row)
+            matches_idx = [match.start() for match in matches]
+            if matches_idx:
+                for idx in matches_idx:
+                    macro_idx.append({
+                        'macro': macro,
+                        'idx': idx
+                    })
+
+        # Make sure the distance between matches is at least 8 - this way we don't confuse VAR with CONSTP2VAR/P2VAR/FUNC_P2VAR
+        macro_idx = sorted(macro_idx, key = lambda i: i['idx'])      
+        for i, idx in enumerate(macro_idx):
+            if (i > 0) and (macro_idx[i]['idx'] < (macro_idx[i-1]['idx'] + 8)):
+                macro_idx.pop(i)
+        # macro_idx should look like this: [{'macro': 'P2VAR', 'idx': 0}, {'macro': 'P2VAR', 'idx': 77}]
+        
+        # Get type and name for params
+        if len(macro_idx) == 1:
+            # Only one param in this function declaration
+            params.append({
+                'type': param_row[:(param_row.rfind(')')+1)],
+                'name': param_row.rsplit(')', 1)[1].strip()
+            })
+        
+        elif len(macro_idx) > 1:  
+            # Multiple params: sepparate them and then get the type and name
+            for i, idx in enumerate(macro_idx):
+                if i == (len(macro_idx) - 1):
+                    param = param_row[macro_idx[i]['idx']:].rstrip(' ')
+                else:
+                    param = param_row[macro_idx[i]['idx']:macro_idx[i+1]['idx']].rstrip(' ').rstrip(',')
+
+                params.append({
+                    'type': param[:(param.rfind(')')+1)],
+                    'name': param.rsplit(')', 1)[1].strip()
+                })       
+
+        return params
+
 
     def __print_lines(self, pl3, pl2, pl1, cur_l):
         print("3: " + pl3)
@@ -122,11 +208,11 @@ class RteMock:
 # Extract c function declarations from lib exports and rte files
 # - arg 1: lib file (text) path
 # - arg 2: rte.c file path
-# - arg 3: rte include folder path
+# - arg 3: Compiler.h path
 # - arg 4: results file path
 ##############################################################################################
 if __name__ == "__main__":
-    mock = RteMock('c')
+    mock = RteMock(sys.argv[3])
     func_names = mock.parse_lib(sys.argv[1])
     funcs = mock.parse_rte(func_names, sys.argv[2])
     # mock.gen_template('c', funcs, sys.argv[4])
