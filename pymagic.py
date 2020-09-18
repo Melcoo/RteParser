@@ -37,7 +37,9 @@ class RteMock:
                 for line in lib.readlines():
                     line_idx = line.find(FUNC_TEMPL)
                     if (line_idx != -1):
-                        func_names.append(line[line_idx:].replace('\n', ''))
+                        name = line[line_idx:].replace('\n', '')
+                        if name not in func_names:
+                            func_names.append(name)
  
         return func_names
 

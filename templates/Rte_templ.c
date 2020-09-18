@@ -5,8 +5,8 @@
 /* This header file is included for the respective BSW module */
 #raw
 #include "Rte.h"
-#include "Rte_Main.h"
 #include "Rte_SwcLaIntegrationFem.h"
+#undef RTE_APPLICATION_HEADER_FILE
 #include "Rte_SwcLaMaster.h"
 #end raw
 
@@ -16,6 +16,9 @@
 ******************************************************************************/
 rteStubs_t rteStubs;
 
+#raw
+#define RTE_E_OK  0
+#end raw
 
 /*******************************************************************************
 * RTE INIT FUNCTION DEFINITIONS
