@@ -33,7 +33,13 @@ $func["params"]["decl"]
 {
 	#for $val in $func["params"]["vals"]
 	#if $val["is_pointer"]
-	*${val["name"]} = rteStubs.${func["name"]}_$val["name"];
+	#if "Rte_Call_" in $func["name"]
+	(void) RteMemCpy(${val["name"]}, &rteStubs.${func["name"]}_$val["name"], sizeof($val["type_basic"]))
+	#else if "Rte_Read_" in $func["name"]
+	(void) RteMemCpy(${val["name"]}, &rteStubs.${func["name"]}_$val["name"], sizeof($val["type_basic"]))
+	#else if "Rte_Write_" in $func["name"]
+	(void) RteMemCpy(&rteStubs.${func["name"]}_$val["name"], ${val["name"]}, sizeof($val["type_basic"]))
+	#end if
 	#else
 	rteStubs.${func["name"]}_$val["name"] = $val["name"];
 	#end if

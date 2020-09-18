@@ -7,12 +7,15 @@
 			"vals": [
 				{
 					"type_full": "VAR (uint8, RTE_APPL_DATA)",
-					"type_simple": "uint8",
-					"name": "Data"
+					"type_basic": "uint8",
+					"name": "Data",
+					"is_pointer": "False"
 				},
 								{
-					"type": "P2VAR (AngularSpeedRightObject2, AUTOMATIC, RTE_APPL_DATA)",
-					"name": "Data"
+					"type_full": "P2VAR (AngularSpeedRightObject2, AUTOMATIC, RTE_APPL_DATA)",
+					"type_basic": "AngularSpeedRightObject2",
+					"name": "Data",
+					"is_pointer": "True"
 				}
 			]
 		}
