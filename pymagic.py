@@ -30,13 +30,14 @@ class RteMock:
 
 
     # Return an array with all read/write functions names
-    def parse_lib(self, file):
+    def parse_lib(self, files):
         func_names = []
-        with open(file, "r") as lib:
-            for line in lib.readlines():
-                line_idx = line.find(FUNC_TEMPL)
-                if (line_idx != -1):
-                    func_names.append(line[line_idx:].replace('\n', ''))
+        for file in files:
+            with open(file, "r") as lib:
+                for line in lib.readlines():
+                    line_idx = line.find(FUNC_TEMPL)
+                    if (line_idx != -1):
+                        func_names.append(line[line_idx:].replace('\n', ''))
  
         return func_names
 
@@ -172,9 +173,13 @@ class RteMock:
         # Get type and name for params
         if len(macro_idx) == 1:
             # Only one param in this function declaration
+            type_full = param_row[:(param_row.rfind(')')+1)]
+            type_basic = re.search(r'\((.*?)\,', type_full).group(1)
             params.append({
-                'type': param_row[:(param_row.rfind(')')+1)],
-                'name': param_row.rsplit(')', 1)[1].strip()
+                'type_full': type_full,
+                'type_basic': type_basic,
+                'name': param_row.rsplit(')', 1)[1].strip(),
+                'is_pointer': ('P2' in macro_idx[0]['macro']) 
             })
         
         elif len(macro_idx) > 1:  
@@ -185,9 +190,13 @@ class RteMock:
                 else:
                     param = param_row[macro_idx[i]['idx']:macro_idx[i+1]['idx']].rstrip(' ').rstrip(',')
 
+                type_full = param[:(param.rfind(')')+1)]
+                type_basic = re.search(r'\((.*?)\,', type_full).group(1)
                 params.append({
-                    'type': param[:(param.rfind(')')+1)],
-                    'name': param.rsplit(')', 1)[1].strip()
+                    'type_full': type_full,
+                    'type_basic': type_basic,
+                    'name': param.rsplit(')', 1)[1].strip(),
+                    'is_pointer': ('P2' in macro_idx[i]['macro']) 
                 })       
 
         return params
@@ -207,16 +216,17 @@ class RteMock:
 # Extract c function declarations from lib exports and rte files
 # - arg 1: "Compiler.h" path
 # - arg 2: "Rte.c" path
-# - arg 3: lib file (text) path
-# - arg 4: "Rte.c" template file path
-# - arg 5: "Rte.c" generated file path
-# - arg 6: "Rte.h" template file path
-# - arg 7: "Rte.h" generated file path
+# - arg 3: lib file 1 (text) path
+# - arg 4: lib file 2 (text) path
+# - arg 5: "Rte.c" template file path
+# - arg 6: "Rte.c" generated file path
+# - arg 7: "Rte.h" template file path
+# - arg 8: "Rte.h" generated file path
 ##############################################################################################
 if __name__ == "__main__":
     mock = RteMock(sys.argv[1])
-    func_names = mock.parse_lib(sys.argv[3])
+    func_names = mock.parse_lib([sys.argv[3], sys.argv[4]])
     funcs = mock.parse_rte(func_names, sys.argv[2])
-    mock.gen_template(funcs, [sys.argv[4], sys.argv[6]], [sys.argv[5], sys.argv[7]])
+    mock.gen_template(funcs, [sys.argv[5], sys.argv[7]], [sys.argv[6], sys.argv[8]])
 
-    for i, f in enumerate(funcs): print('{}: {}'.format(i, f))
+    # for i, f in enumerate(funcs): print('{}: {}'.format(i, f))

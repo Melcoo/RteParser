@@ -6,7 +6,8 @@
 			"decl": "(VAR (uint8, RTE_APPL_DATA) Data)",
 			"vals": [
 				{
-					"type": "VAR (uint8, RTE_APPL_DATA)",
+					"type_full": "VAR (uint8, RTE_APPL_DATA)",
+					"type_simple": "uint8",
 					"name": "Data"
 				},
 								{

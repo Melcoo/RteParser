@@ -32,7 +32,11 @@ $func["retval"] $func["name"]
 $func["params"]["decl"]
 {
 	#for $val in $func["params"]["vals"]
+	#if $val["is_pointer"]
+	*${val["name"]} = rteStubs.${func["name"]}_$val["name"];
+	#else
 	rteStubs.${func["name"]}_$val["name"] = $val["name"];
+	#end if
 	#end for
 
 	return RTE_E_OK;
