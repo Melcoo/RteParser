@@ -1,5 +1,9 @@
+#raw
+#include "Std_Types.h"
+#include "Rte_Type.h"
+#end raw
 
-typedef struct rteStubs_t 
+typedef struct 
 {
 	#set $types = []
 	#for $func in $funcs_decl
@@ -11,7 +15,6 @@ typedef struct rteStubs_t
 	#end if
 	#end for
 	#end for
-}
+} rteStubs_t;
 
-extern struct rteStubs_t rteStubs;
 
