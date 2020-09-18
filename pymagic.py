@@ -7,7 +7,6 @@ from Cheetah.Template import Template
 FUNC_TEMPL = 'Rte_'
 
 
-
 class RteMock:
     cur_dir = os.path.dirname(sys.argv[0])
 
@@ -35,7 +34,7 @@ class RteMock:
         func_names = []
         with open(file, "r") as lib:
             for line in lib.readlines():
-                line_idx = line.find('Rte_')
+                line_idx = line.find(FUNC_TEMPL)
                 if (line_idx != -1):
                     func_names.append(line[line_idx:].replace('\n', ''))
  
@@ -194,27 +193,30 @@ class RteMock:
         return params
 
 
-    def __print_lines(self, pl3, pl2, pl1, cur_l):
-        print("3: " + pl3)
-        print("2: " + pl2)
-        print("1: " + pl1)
-        print("0: " + cur_l + "\n")
+    def gen_template(self, funcs, templ_files, out_files): 
+        for i, templ in enumerate(templ_files):
+            with open(templ, 'r') as f:
+                t = Template(f.read())
+                t.funcs_decl = funcs
+                with open(out_files[i], 'w') as f:
+                    f.write(str(t))
 
-    def gen_template(self, funcs, output):
-        pass
 
 
 ##############################################################################################
 # Extract c function declarations from lib exports and rte files
-# - arg 1: lib file (text) path
-# - arg 2: rte.c file path
-# - arg 3: Compiler.h path
-# - arg 4: results file path
+# - arg 1: "Compiler.h" path
+# - arg 2: "Rte.c" path
+# - arg 3: lib file (text) path
+# - arg 4: "Rte.c" template file path
+# - arg 5: "Rte.c" generated file path
+# - arg 6: "Rte.h" template file path
+# - arg 7: "Rte.h" generated file path
 ##############################################################################################
 if __name__ == "__main__":
-    mock = RteMock(sys.argv[3])
-    func_names = mock.parse_lib(sys.argv[1])
+    mock = RteMock(sys.argv[1])
+    func_names = mock.parse_lib(sys.argv[3])
     funcs = mock.parse_rte(func_names, sys.argv[2])
-    # mock.gen_template('c', funcs, sys.argv[4])
+    mock.gen_template(funcs, [sys.argv[4], sys.argv[6]], [sys.argv[5], sys.argv[7]])
 
     for i, f in enumerate(funcs): print('{}: {}'.format(i, f))
