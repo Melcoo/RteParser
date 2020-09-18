@@ -1,0 +1,19 @@
+[
+	{
+		"retval": "FUNC...",
+		"name": "Rte_Read...",
+		"params": {
+			"decl": "(VAR (uint8, RTE_APPL_DATA) Data)",
+			"vals": [
+				{
+					"type": "VAR (uint8, RTE_APPL_DATA)",
+					"name": "Data"
+				},
+								{
+					"type": "P2VAR (AngularSpeedRightObject2, AUTOMATIC, RTE_APPL_DATA)",
+					"name": "Data"
+				}
+			]
+		}
+	}
+]
