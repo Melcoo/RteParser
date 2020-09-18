@@ -1,9 +1,14 @@
 
 typedef struct rteStubs_t 
 {
+	#set $types = []
 	#for $func in $funcs_decl
 	#for $val in $func["params"]["vals"]
-	$val["type_basic"] ${func["name"]}_$val["name"];
+	<% type = func["name"] + '_' + val["name"] %>
+	#if $type not in $types
+	$val["type_basic"] $type;
+	$types.append($type)
+	#end if
 	#end for
 	#end for
 }
