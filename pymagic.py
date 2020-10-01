@@ -3,6 +3,7 @@ import os
 import copy
 import re
 from Cheetah.Template import Template
+from coding import Coding
 
 FUNC_TEMPL = 'Rte_'
 
@@ -133,9 +134,11 @@ class RteMock:
         func_row = func_row.replace('\n', '')
         # Function Return type
         func_decl['retval'] = 'FUNC(' + re.search(r'FUNC\((.*?)\)', func_row).group(1) + ')'
+
         # Function Name
         func_decl['name'] = func_name
         func_row = func_row.split(func_name, 1)[1]
+
         # Function parameters
         func_decl['params'] = {}
         if ('{' in func_row):
@@ -143,6 +146,9 @@ class RteMock:
         else:
             func_decl['params']['decl'] = func_row.rstrip()
         func_decl['params']['vals'] = self.__parse_params_val(func_decl['params']['decl'])
+
+        # Func param default values
+        func_decl['defval'] = [0]
 
         return func_decl
 
@@ -204,6 +210,18 @@ class RteMock:
         return params
 
 
+    def addDefaultValues(self, funcs, coding_file):
+
+        coding_params = Coding(coding_file).parseCafex()
+        for cpar in coding_params:
+            # [print(cpar['name']) for f in funcs if cpar['name'] in f['name']]
+            for i, f in enumerate(funcs):
+                if cpar['name'] in f['name']:
+                    funcs[i]['defval'] = cpar['defval']
+                    print(str(i) + str(new_funcs[i]['defval']))
+                    
+        return funcs
+
     def gen_template(self, funcs, templ_files, out_files): 
         for i, templ in enumerate(templ_files):
             with open(templ, 'r') as f:
@@ -224,11 +242,33 @@ class RteMock:
 # - arg 6: "Rte.c" generated file path
 # - arg 7: "Rte.h" template file path
 # - arg 8: "Rte.h" generated file path
+# - arg 9:  cafex.xml file path
 ##############################################################################################
 if __name__ == "__main__":
     mock = RteMock(sys.argv[1])
     func_names = mock.parse_lib([sys.argv[3], sys.argv[4]])
     funcs = mock.parse_rte(func_names, sys.argv[2])
+    funcs = mock.addDefaultValues(funcs, sys.argv[9])
+    # funcs = [
+    # {
+    # 	"retval": "FUNC...",
+    # 	"name": "Rte_Read...",
+    # 	"params": {
+    # 		"decl": "(VAR (uint8, RTE_APPL_DATA) Data)",
+    # 		"vals": [
+    # 			{
+    # 				"type": "VAR (uint8, RTE_APPL_DATA)",
+    # 				"name": "Data"
+    # 			},
+    # 							{
+    # 				"type": "P2VAR (AngularSpeedRightObject2, AUTOMATIC, RTE_APPL_DATA)",
+    # 				"name": "Data"
+    # 			}
+    # 		]
+    # 	},
+    #   "defval": [0]
+    # }]
+
     mock.gen_template(funcs, [sys.argv[5], sys.argv[7]], [sys.argv[6], sys.argv[8]])
 
     # for i, f in enumerate(funcs): print('{}: {}'.format(i, f))

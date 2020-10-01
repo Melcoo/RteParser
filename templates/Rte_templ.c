@@ -11,14 +11,20 @@
 #end raw
 
 
+/*******************************************************************************
+** Rte #DEFINES USED FOR INITIALISATION OF GLOBAL VARIABLES                   **
+*******************************************************************************/
+
+#raw
+#define RTE_E_OK  0
+#end raw
+
+
 /******************************************************************************
 * Global Variables
 ******************************************************************************/
 rteStubs_t rteStubs;
 
-#raw
-#define RTE_E_OK  0
-#end raw
 
 /*******************************************************************************
 * RTE INIT FUNCTION DEFINITIONS
@@ -35,6 +41,10 @@ void RteMemCpy(const void* dest, const void* src, uint32 size)
 }
 #end raw
 
+void Rte_InitStubs(void)
+{
+	
+}
 
 /*******************************************************************************
 * FUNCTION DEFINITIONS
