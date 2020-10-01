@@ -217,11 +217,12 @@ class RteMock:
             for i, f in enumerate(funcs):
                 if cpar['name'] in f['name']:
                     # This is a multi array - which means it's a hex array
+                    
                     if len(cpar['defval']) > 1:
-                        for i, val in enumerate(cpar['defval']):
-                            cpar['defval'][i] = '0x' + val
-                    funcs[i]['defval'] = cpar['defval']    
-
+                        for j, val in enumerate(cpar['defval']):
+                            cpar['defval'][j] = '0x' + val 
+                    funcs[i]['defval'] = cpar['defval']
+                    
         return funcs
 
     def gen_template(self, funcs, templ_files, out_files): 
