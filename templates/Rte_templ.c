@@ -64,21 +64,23 @@ void RteMemCpy(const void* dest, const void* src, uint32 size)
 
 void Rte_InitStubs(void)
 {
-	#set $types = []
-	#for $func in $funcs_decl
-	#for $val in $func["params"]["vals"]
+#set $types = []
+#for $func in $funcs_decl
+#if "Rte_Call_" in $func["name"]
+#for $val in $func["params"]["vals"]
 <%type = func["name"] + '_' + val["name"]%>#slurp
-	#if $type not in $types
-	#if len($func["defval"]) < 2
-	rteStubs.$type = $func["defval"][0];
-	#else
+#if $type not in $types
+#if len($func["defval"]) < 2
+rteStubs.$type = $func["defval"][0];
+#else
 <%size = len(func["defval"])%>#slurp
-	(void) RteMemCpy(&rteStubs.${type}[0], &rteStubs.${type}_Default[0], $size); 
-	#end if
+(void) RteMemCpy(&rteStubs.${type}[0], &${type}_Default[0], $size); 
+#end if
 $types.append($type)#slurp
-	#end if
-	#end for
-	#end for
+#end if
+#end for
+#end if
+#end for
 }
 
 /*******************************************************************************
