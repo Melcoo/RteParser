@@ -211,15 +211,17 @@ class RteMock:
 
 
     def addDefaultValues(self, funcs, coding_file):
-
         coding_params = Coding(coding_file).parseCafex()
         for cpar in coding_params:
             # [print(cpar['name']) for f in funcs if cpar['name'] in f['name']]
             for i, f in enumerate(funcs):
                 if cpar['name'] in f['name']:
-                    funcs[i]['defval'] = cpar['defval']
-                    print(str(i) + str(new_funcs[i]['defval']))
-                    
+                    # This is a multi array - which means it's a hex array
+                    if len(cpar['defval']) > 1:
+                        for i, val in enumerate(cpar['defval']):
+                            cpar['defval'][i] = '0x' + val
+                    funcs[i]['defval'] = cpar['defval']    
+
         return funcs
 
     def gen_template(self, funcs, templ_files, out_files): 

@@ -43,7 +43,23 @@ void RteMemCpy(const void* dest, const void* src, uint32 size)
 
 void Rte_InitStubs(void)
 {
-	
+	#set $types = []
+	#for $func in $funcs_decl
+	#for $val in $func["params"]["vals"]
+<% type = func["name"] + '_' + val["name"] %>#slurp
+	#if $type not in $types
+	#if len($func["defval"]) < 2
+	rteStubs.$type = $func["defval"][0];
+	#else
+	#set $defval = ''
+<% for dv in func["defval"]: defval = defval + dv + ', ' %>#slurp
+<% defval = defval[:-2] %>#slurp
+	rteStubs.$type = [$defval];
+	#end if
+$types.append($type)#slurp
+	#end if
+	#end for
+	#end for
 }
 
 /*******************************************************************************
