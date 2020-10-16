@@ -70,6 +70,7 @@ void Rte_InitStubs(void)
 {
 	#set $types = []
 	#for $func in $funcs_decl
+	#if "Rte_Call_" in $func["name"]
 	#for $val in $func["params"]["vals"]
 #if func["common_name"] == ''
 <%type = func["name"] + '_' + val["name"]%>#slurp
@@ -86,6 +87,7 @@ void Rte_InitStubs(void)
 $types.append($type)#slurp
 	#end if
 	#end for
+	#end if
 	#end for
 }
 
