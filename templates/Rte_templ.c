@@ -32,7 +32,11 @@ rteStubs_t rteStubs;
 #set $types = []
 #for $func in $funcs_decl
 #for $val in $func["params"]["vals"]
+#if func["common_name"] == ''
 <%type = func["name"] + '_' + val["name"]%>#slurp
+#else
+<%type = func["common_name"] + '_' + val["name"]%>#slurp
+#end if
 #if $type not in $types
 <%psize = '[' + str(len(func["defval"])) + ']'%>#slurp
 #if len($func["defval"]) > 1
@@ -67,7 +71,11 @@ void Rte_InitStubs(void)
 	#set $types = []
 	#for $func in $funcs_decl
 	#for $val in $func["params"]["vals"]
+#if func["common_name"] == ''
 <%type = func["name"] + '_' + val["name"]%>#slurp
+#else
+<%type = func["common_name"] + '_' + val["name"]%>#slurp
+#end if
 	#if $type not in $types
 	#if len($func["defval"]) < 2
 	rteStubs.$type = $func["defval"][0];
@@ -90,29 +98,34 @@ $func["retval"] $func["name"]
 $func["params"]["decl"]
 {
 	#for $val in $func["params"]["vals"]
+	#if func["common_name"] == ''
+<%fname = func["name"]%>#slurp
+	#else
+<%fname = func["common_name"]%>#slurp	
+	#end if
 	#if $val["is_pointer"]
 <%size = len(func["defval"])%>#slurp
 	#if "Rte_Call_" in $func["name"]
 	#if $size<2
-	(void) RteMemCpy(${val["name"]}, &rteStubs.${func["name"]}_$val["name"], sizeof($val["type_basic"]));
+	(void) RteMemCpy(${val["name"]}, &rteStubs.${fname}_$val["name"], sizeof($val["type_basic"]));
 	#else
-	(void) RteMemCpy(${val["name"]}, &rteStubs.${func["name"]}_${val["name"]}[0], sizeof(rteStubs.${func["name"]}_$val["name"])/sizeof($val["type_basic"]));
+	(void) RteMemCpy(${val["name"]}, &rteStubs.${fname}_${val["name"]}[0], sizeof(rteStubs.${fname}_$val["name"])/sizeof($val["type_basic"]));
 	#end if
 	#else if "Rte_Read_" in $func["name"]
 	#if $size<2
-	(void) RteMemCpy(${val["name"]}, &rteStubs.${func["name"]}_$val["name"], sizeof($val["type_basic"]));
+	(void) RteMemCpy(${val["name"]}, &rteStubs.${fname}_$val["name"], sizeof($val["type_basic"]));
 	#else
-	(void) RteMemCpy(${val["name"]}, &rteStubs.${func["name"]}_${val["name"]}[0], sizeof(rteStubs.${func["name"]}_$val["name"])/sizeof($val["type_basic"]));
+	(void) RteMemCpy(${val["name"]}, &rteStubs.${fname}_${val["name"]}[0], sizeof(rteStubs.${fname}_$val["name"])/sizeof($val["type_basic"]));
 	#end if
 	#else if "Rte_Write_" in $func["name"]
 	#if $size<2
-	(void) RteMemCpy(&rteStubs.${func["name"]}_$val["name"], ${val["name"]}, sizeof($val["type_basic"]));
+	(void) RteMemCpy(&rteStubs.${fname}_$val["name"], ${val["name"]}, sizeof($val["type_basic"]));
 	#else
-	(void) RteMemCpy(&rteStubs.${func["name"]}_${val["name"]}[0], ${val["name"]}, sizeof(rteStubs.${func["name"]}_$val["name"])/sizeof($val["type_basic"]));
+	(void) RteMemCpy(&rteStubs.${fname}_${val["name"]}[0], ${val["name"]}, sizeof(rteStubs.${fname}_$val["name"])/sizeof($val["type_basic"]));
 	#end if
 	#end if
 	#else
-	rteStubs.${func["name"]}_$val["name"] = $val["name"];
+	rteStubs.${fname}_$val["name"] = $val["name"];
 	#end if
 	#end for
 

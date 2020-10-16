@@ -118,16 +118,7 @@ class RteMock:
         # 	"name": "Rte_Read...",
         # 	"params": {
         # 		"decl": "(VAR (uint8, RTE_APPL_DATA) Data)",
-        # 		"vals": [
-        # 			{
-        # 				"type": "VAR (uint8, RTE_APPL_DATA)",
-        # 				"name": "Data"
-        # 			},
-        # 							{
-        # 				"type": "P2VAR (AngularSpeedRightObject2, AUTOMATIC, RTE_APPL_DATA)",
-        # 				"name": "Data"
-        # 			}
-        # 		]
+        # 		"vals": []
         # 	}
         # }
 
@@ -209,11 +200,30 @@ class RteMock:
 
         return params
 
+    # If interface names are similar, set "common_name" key value to common name
+    # Whis will be used for stub generation instead of "name"
+    def findLinkedInterfaces(self, funcs):
+        func_names = []
+        common_names = []
+        # Interface name should look like: Rte_Write_SwcLaIntegrationFem_CtrLpExSpnVe_CtrPoSpnVeRh
+        # Look after the 3rd "_" and get the part which could be common
+        for f in funcs:
+            func_names.append(f["name"].split('_', 3)[-1])
+    
+        common_names = set([f for f in func_names if func_names.count(f) > 1])
 
+        for i, f in enumerate(func_names):
+            if f in common_names:
+                funcs[i]["common_name"] = 'COMMON_' + f
+            else:
+                funcs[i]["common_name"] = ''
+
+        return funcs
+
+    # Parse coding_file and add "defval" to funcs 
     def addDefaultValues(self, funcs, coding_file):
         coding_params = Coding(coding_file).parseCafex()
         for cpar in coding_params:
-            # [print(cpar['name']) for f in funcs if cpar['name'] in f['name']]
             for i, f in enumerate(funcs):
                 if cpar['name'] in f['name']:
                     # This is a multi array - which means it's a hex array
@@ -251,7 +261,9 @@ if __name__ == "__main__":
     mock = RteMock(sys.argv[1])
     func_names = mock.parse_lib([sys.argv[3], sys.argv[4]])
     funcs = mock.parse_rte(func_names, sys.argv[2])
+    funcs = mock.findLinkedInterfaces(funcs)
     funcs = mock.addDefaultValues(funcs, sys.argv[9])
+
     # funcs = [
     # {
     # 	"retval": "FUNC...",
@@ -260,16 +272,21 @@ if __name__ == "__main__":
     # 		"decl": "(VAR (uint8, RTE_APPL_DATA) Data)",
     # 		"vals": [
     # 			{
-    # 				"type": "VAR (uint8, RTE_APPL_DATA)",
-    # 				"name": "Data"
+    # 				"type_full": "VAR (uint8, RTE_APPL_DATA)",
+    #               "type_basic": "uint8"
+    # 				"name": "Data",
+    #               "is_pointer": False
     # 			},
-    # 							{
-    # 				"type": "P2VAR (AngularSpeedRightObject2, AUTOMATIC, RTE_APPL_DATA)",
-    # 				"name": "Data"
+    # 			{
+    # 				"type_full": "P2VAR (AngularSpeedRightObject2, AUTOMATIC, RTE_APPL_DATA)",
+    # 				"type_basic": "AngularSpeedRightObject2",
+    #               "name": "Data",
+    #               "is_pointer": True
     # 			}
     # 		]
     # 	},
     #   "defval": [0]
+    #   "common_name": "COMMON_AngularSpeedRightObject2"
     # }]
 
     mock.gen_template(funcs, [sys.argv[5], sys.argv[7]], [sys.argv[6], sys.argv[8]])
