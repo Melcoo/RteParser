@@ -1,4 +1,8 @@
 #raw
+
+#ifndef RTE_H_INCLUDED
+#define RTE_H_INCLUDED
+
 #include "Std_Types.h"
 #include "Rte_Type.h"
 #end raw
@@ -26,4 +30,7 @@ $types.append($type) #slurp
 	#end for
 } rteStubs_t;
 
+#raw
+#endif
+#end raw
 

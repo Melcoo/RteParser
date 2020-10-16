@@ -59,7 +59,7 @@ $types.append($type)#slurp
 void RteMemCpy(const void* dest, const void* src, uint32 size)
 {
 	uint32 i=0;
-	for (i; i < size; i++)
+	for (i=0; i < size; i++)
 	{
 		((uint8*)dest)[i] = ((uint8*)src)[i];
 	}
