@@ -82,7 +82,7 @@ void Rte_InitStubs(void)
 	rteStubs.$type = $func["defval"][0];
 	#else
 <%size = len(func["defval"])%>#slurp
-	(void) RteMemCpy(&rteStubs.${type}[0], &rteStubs.${type}_Default[0], $size); 
+	(void) RteMemCpy(&rteStubs.${type}[0], &${type}_Default[0], $size); 
 	#end if
 $types.append($type)#slurp
 	#end if
