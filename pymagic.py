@@ -221,8 +221,8 @@ class RteMock:
         return funcs
 
     # Parse coding_file and add "defval" to funcs 
-    def addDefaultValues(self, funcs, coding_file):
-        coding_params = Coding(coding_file).parseCafex()
+    def addDefaultValues(self, funcs, coding_file, car_line):
+        coding_params = Coding(coding_file).parseCafex(car_line)
         for cpar in coding_params:
             for i, f in enumerate(funcs):
                 if cpar['name'] in f['name']:
@@ -256,13 +256,14 @@ class RteMock:
 # - arg 7: "Rte.h" template file path
 # - arg 8: "Rte.h" generated file path
 # - arg 9:  cafex.xml file path
+# - arg 10: car line (ex: 'G070')
 ##############################################################################################
 if __name__ == "__main__":
     mock = RteMock(sys.argv[1])
     func_names = mock.parse_lib([sys.argv[3], sys.argv[4]])
     funcs = mock.parse_rte(func_names, sys.argv[2])
     funcs = mock.findLinkedInterfaces(funcs)
-    funcs = mock.addDefaultValues(funcs, sys.argv[9])
+    funcs = mock.addDefaultValues(funcs, sys.argv[9], sys.argv[10])
 
     # funcs = [
     # {
