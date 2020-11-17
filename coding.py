@@ -55,8 +55,11 @@ class Coding:
                                 break
 
                 if carline_found:
-                    param['defval'] = carline_defval
-                    if defval_isarray:
+                    if not defval_isarray:
+                        param['defval'] = []
+                        param['defval'].append(carline_defval)
+                    else:
+                            param['defval'] = carline_defval
                             n = 2
                             hex_array = [(param['defval'][i:i+n]) for i in range(0, len(param['defval']), n)]
                             param['defval'] = hex_array            
@@ -92,4 +95,4 @@ class Coding:
 ##############################################################################################
 if __name__ == "__main__":
     coding = Coding(sys.argv[1])
-    coding.parseCafex(sys.argv[2])
+    print (coding.parseCafex(sys.argv[2]))
